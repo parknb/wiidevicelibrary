@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -124,7 +124,7 @@ namespace LinuxGUITest
 				LogLine("Found a device, trying to connect...");
 				string details = "unavailable";
 				if(args.DeviceInfo is IBluetoothDeviceInfo)
-                    details = ((IBluetoothDeviceInfo)(args.DeviceInfo)).Address.ToString();
+					details = ((IBluetoothDeviceInfo)(args.DeviceInfo)).BluetoothAddress.ToString();
 				iter = _ListStore.AppendValues("Device", details);
 			} );
 			try

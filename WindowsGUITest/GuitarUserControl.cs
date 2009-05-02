@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -26,7 +26,7 @@ using WiiDeviceLibrary.Extensions;
 
 namespace WindowsGUITest
 {
-    public partial class GuitarUserControl : UserControl, IExtensionControl
+    public partial class GuitarUserControl : UserControl
     {
         private GuitarExtension _Guitar;
         public GuitarExtension Guitar
@@ -38,9 +38,11 @@ namespace WindowsGUITest
         public GuitarUserControl()
         {
             InitializeComponent();
+
+            Application.Idle += Application_Idle;
         }
 
-        public void UpdateUI()
+        void Application_Idle(object sender, EventArgs e)
         {
             if (Guitar != null)
             {

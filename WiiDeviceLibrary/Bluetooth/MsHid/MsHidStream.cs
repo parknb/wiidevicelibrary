@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -38,7 +38,6 @@ namespace WiiDeviceLibrary.Bluetooth.MsHid
         }
 
         private byte[] writeBuffer = new byte[22];
-        private object writingLocker = new object();
 
         public MsHidStream(string devicePath)
             : this(CreateFileHandle(devicePath))
@@ -68,23 +67,24 @@ namespace WiiDeviceLibrary.Bluetooth.MsHid
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int result = 0;
             try
             {
-                result = _BaseStream.Read(buffer, offset, count);
+                return _BaseStream.Read(buffer, offset, count);
             }
-            catch (IOException) { }
-            catch (ObjectDisposedException) { }
-            return result;
+            catch (IOException)
+            {
+                return 0;
+            }
+            catch (ObjectDisposedException)
+            {
+                return 0;
+            }
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            lock (writingLocker)
-            {
-                Array.Copy(buffer, offset, writeBuffer, 0, count);
-                WriteHidReport();
-            }
+            Array.Copy(buffer, offset, writeBuffer, 0, count);
+            WriteHidReport();
         }
 
         private void WriteHidReport()
@@ -97,10 +97,11 @@ namespace WiiDeviceLibrary.Bluetooth.MsHid
             _BaseStream.Write(writeBuffer, 0, 22);
         }
 
-        public override void Close()
+        protected override void Dispose(bool disposing)
         {
-            _BaseStream.Close();
-            base.Close();
+            if (disposing)
+                BaseStream.Close();
+            base.Dispose(disposing);
         }
 
         #region Not supported methods

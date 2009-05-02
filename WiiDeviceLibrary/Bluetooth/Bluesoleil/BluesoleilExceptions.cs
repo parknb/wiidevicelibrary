@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -74,10 +74,6 @@ namespace WiiDeviceLibrary.Bluetooth.Bluesoleil
     }
 
     public class BluesoleilNonExistingDeviceException : BluesoleilException
-    {
-    }
-
-    public class BluesoleilNonExistingConnectionException : BluesoleilException
     {
     }
 

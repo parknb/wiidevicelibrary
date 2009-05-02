@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -18,22 +18,16 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using WiiDeviceLibrary.Bluetooth.MsHid;
 
 namespace WiiDeviceLibrary.Bluetooth.MsBluetooth
 {
-    public class MsBluetoothDeviceInfo: MsHidDeviceInfo, IBluetoothDeviceInfo
+    public class MsBluetoothWiimoteInfo: IBluetoothDeviceInfo
     {
         #region Properties
-        private BluetoothAddress _Address;
-        public BluetoothAddress Address
+        private BluetoothAddress _BluetoothAddress;
+        public BluetoothAddress BluetoothAddress
         {
-            get { return _Address; }
-        }
-
-        public string Name
-        {
-            get { return this.Device.name; }
+            get { return _BluetoothAddress; }
         }
 
         private NativeMethods.BluetoothDeviceInfo _Device;
@@ -44,29 +38,10 @@ namespace WiiDeviceLibrary.Bluetooth.MsBluetooth
         }
         #endregion
         #region Constructors
-        internal MsBluetoothDeviceInfo(BluetoothAddress bluetoothAddress, NativeMethods.BluetoothDeviceInfo device)
+        internal MsBluetoothWiimoteInfo(BluetoothAddress bluetoothAddress, NativeMethods.BluetoothDeviceInfo device)
         {
-            _Address = bluetoothAddress;
+            _BluetoothAddress = bluetoothAddress;
             _Device = device;
-        }
-        #endregion
-        #region Methods
-        public override bool Equals(MsHidDeviceInfo other)
-        {
-            MsBluetoothDeviceInfo msbtOther = other as MsBluetoothDeviceInfo;
-            if (msbtOther == null)
-                return false;
-            return Equals(msbtOther);
-        }
-
-        public bool Equals(MsBluetoothDeviceInfo other)
-        {
-            return this.Address == other.Address;
-        }
-
-        public override int GetHashCode()
-        {
-            return Address.GetHashCode();
         }
         #endregion
     }

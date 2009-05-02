@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -52,7 +52,7 @@ namespace Examples
 
             if (lostDeviceInfo is IBluetoothDeviceInfo)
             {
-                Console.WriteLine("The address of the Bluetooth device is {0}", ((IBluetoothDeviceInfo)lostDeviceInfo).Address);
+                Console.WriteLine("The address of the Bluetooth device is {0}", ((IBluetoothDeviceInfo)lostDeviceInfo).BluetoothAddress);
             }
         }
         #endregion
@@ -108,7 +108,6 @@ namespace Examples
             // In this example we will only cover the Nunchuk, but we can also check for other available extensions.
             if (extension is NunchukExtension)
             {
-                wiimote.SetReportingMode(ReportingMode.ButtonsAccelerometer16Extension);
                 Console.WriteLine("A nunchuk attached to the Wiimote.");
             }
             // A few 'dummy-extensions' are available to detect various undefined situations.

@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -83,6 +83,7 @@ namespace LinuxGUITest
 					_ExtensionInformation = new ClassicControllerInformation((ClassicControllerExtension)_Wiimote.Extension);
 					GtkAlignment2.Add(_ExtensionInformation.Widget);
 				}
+				_Wiimote.SetReportingMode(_Wiimote.ReportingMode);
 			});
 		}
 		
@@ -92,6 +93,7 @@ namespace LinuxGUITest
 			{
 				GtkAlignment2.Remove(_ExtensionInformation.Widget);
 				_ExtensionInformation = null;
+				_Wiimote.SetReportingMode(_Wiimote.ReportingMode);
 			});
 		}		
 		
@@ -133,6 +135,11 @@ namespace LinuxGUITest
             entryY.Text = _Wiimote.Accelerometer.Calibrated.Y.ToString();
             entryZ.Text = _Wiimote.Accelerometer.Calibrated.Z.ToString();
 			
+			//if(_Wiimote.ReportingMode.ToString() != comboboxReportingMode.ActiveText)
+			//	comboboxReportingMode.
+			//	comboboxReportingMode.ActiveText = _Wiimote.ReportingMode.ToString();
+			// update battery level
+			//Console.WriteLine(_Wiimote.BatteryLevel);
 			progressbarBattery.Fraction = (double)(_Wiimote.BatteryLevel) / 0xC8;
 			
 			drawingareaIR.QueueDraw();
@@ -197,8 +204,6 @@ namespace LinuxGUITest
 		{
             foreach (ReportingMode reportingMode in Enum.GetValues(typeof(ReportingMode)))
 			{
-				if (reportingMode == ReportingMode.None)
-					continue;
                 if (comboboxReportingMode.ActiveText == reportingMode.ToString())
 				{
                     if (reportingMode != _Wiimote.ReportingMode)

@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -77,7 +77,7 @@ namespace WiiDeviceLibrary.Bluetooth.MsHid
             {
                 if (!_FoundDevices.ContainsKey(devicePath))
                 {
-                    MsHidDeviceInfo deviceInfo = new MsHidDeviceInfo(devicePath);
+                    MsHidWiimoteInfo deviceInfo = new MsHidWiimoteInfo(devicePath);
                     _FoundDevices.Add(devicePath, deviceInfo);
                     OnWiimoteFound(new DeviceInfoEventArgs(deviceInfo));
                 }
@@ -102,11 +102,12 @@ namespace WiiDeviceLibrary.Bluetooth.MsHid
 
         public IDevice Connect(IDeviceInfo deviceInfo)
         {
-            MsHidDeviceInfo hidWiimoteInfo = deviceInfo as MsHidDeviceInfo;
+            MsHidWiimoteInfo hidWiimoteInfo = deviceInfo as MsHidWiimoteInfo;
             if (hidWiimoteInfo == null)
                 throw new ArgumentException("The specified WiimoteInfo does not belong to this WiimoteProvider.", "deviceInfo");
             string devicePath = hidWiimoteInfo.DevicePath;
 
+            // TODO: Find out which to choose. (is this specific to the stack, OS or should this be interpret as 'random'.
             Stream hidStream;
             if (UseSetOutputReport)
                 hidStream = new MsHidSetOutputReportStream(devicePath);

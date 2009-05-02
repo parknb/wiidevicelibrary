@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -117,6 +117,8 @@ namespace WindowsGUITest
         {
             base.OnLoad(e);
 
+            sizeLabel.Width = wiidevicePanel.ClientSize.Width - (wiidevicePanel.Padding.Left + wiidevicePanel.Padding.Right);
+
             idleTimer = new System.Windows.Forms.Timer();
             idleTimer.Tick += idleTimer_Tick;
             idleTimer.Interval = 10;
@@ -192,6 +194,7 @@ namespace WindowsGUITest
                     WiimoteUserControl ucontrol = new WiimoteUserControl();
                     ucontrol.Wiimote = wiimote;
                     uiDevice.Control = ucontrol;
+                    ucontrol.Dock = DockStyle.Fill;
                     wiidevicePanel.Controls.Add(ucontrol);
                 }), device);
             }
@@ -202,6 +205,7 @@ namespace WindowsGUITest
                     BalanceBoardUserControl ucontrol = new BalanceBoardUserControl();
                     ucontrol.BalanceBoard = balanceBoard;
                     uiDevice.Control = ucontrol;
+                    ucontrol.Dock = DockStyle.Fill;
                     wiidevicePanel.Controls.Add(ucontrol);
                 }), device);
             }
@@ -213,6 +217,11 @@ namespace WindowsGUITest
         {
             IDevice device = (IDevice)sender;
             Remove(device);
+        }
+
+        private void wiidevicePanel_SizeChanged(object sender, EventArgs e)
+        {
+            sizeLabel.Width = wiidevicePanel.ClientSize.Width - (wiidevicePanel.Padding.Left + wiidevicePanel.Padding.Right);
         }
 
         private void devicesBox_SelectedValueChanged(object sender, EventArgs e)
@@ -248,7 +257,7 @@ namespace WindowsGUITest
         {
             StringBuilder sbuilder = new StringBuilder();
             if (DeviceInfo is IBluetoothDeviceInfo)
-                sbuilder.Append(((IBluetoothDeviceInfo)DeviceInfo).Address);
+                sbuilder.Append(((IBluetoothDeviceInfo)DeviceInfo).BluetoothAddress);
             else
                 sbuilder.Append(DeviceInfo.ToString());
             if (Device != null)

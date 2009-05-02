@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -23,7 +23,6 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 {	
 	internal static class NativeMethods
 	{		
-		public const int EINTR = 4;
 		public const int AF_BLUETOOTH = 31;
 		public const int SOCK_SEQPACKET = 5;
 		public const int BTPROTO_L2CAP = 0;
@@ -132,13 +131,12 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 			public byte f;
 		}
 		
-		[StructLayout(LayoutKind.Sequential, Pack=2)]
+		[StructLayout(LayoutKind.Sequential)]
 		internal struct sockaddr_l2
 		{
 			public ushort l2_family;
 			public ushort l2_psm;
 			public bdaddr_t bdaddr;
-			public ushort l2_cid;
 		}
 	
 		[DllImport("libc")]
@@ -161,6 +159,9 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 		
 		[DllImport("libbluetooth.so.3")]
 		public static extern int str2ba(string str, out bdaddr_t ba);
+		
+        //[DllImport("libbluetooth.so.3")]
+        //public static extern int ba2str(ref bdaddr_t ba, [Out] StringBuilder str);
 
         [DllImport("libc", SetLastError = true)]
 		public static extern int socket(int socket_family, int socket_type, int protocol);
@@ -179,13 +180,5 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 		
 		[DllImport("libc", SetLastError = true)]
 		public static extern int send(int socket, [MarshalAs(UnmanagedType.LPArray)]byte[] buffer, int length, int flags);			
-		
-        [DllImport ("libc", EntryPoint="strerror")]
-		static extern IntPtr _strerror(int errnum);
-		public static string strerror (int errnum)
-		{
-			return Marshal.PtrToStringAnsi (_strerror (errnum));
-		}		
-		
 	}
 }

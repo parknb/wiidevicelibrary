@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -42,9 +42,8 @@ namespace WiiDeviceLibrary
         }
         #endregion
 
-        public override void Initialize()
+        public void Initialize()
         {
-            UpdateStatus();
             ReadCalibrationData();
             SetReportingMode(ReportingMode.Buttons8Extension);
         }

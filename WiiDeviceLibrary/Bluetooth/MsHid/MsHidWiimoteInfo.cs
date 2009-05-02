@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -21,38 +21,28 @@ using System.Text;
 
 namespace WiiDeviceLibrary.Bluetooth.MsHid
 {
-    public class MsHidDeviceInfo: IDeviceInfo, IEquatable<MsHidDeviceInfo>
+    public class MsHidWiimoteInfo: IDeviceInfo, IEquatable<MsHidWiimoteInfo>
     {
         private string _DevicePath;
         public string DevicePath
         {
             get { return _DevicePath; }
-            set
-            {
-                if (_DevicePath != null)
-                    throw new InvalidOperationException("The devicepath was already set.");
-                _DevicePath = value;
-            }
         }
 
-        public MsHidDeviceInfo()
-        {
-        }
-
-        public MsHidDeviceInfo(string devicePath)
+        public MsHidWiimoteInfo(string devicePath)
         {
             _DevicePath = devicePath;
         }
 
         public override bool Equals(object obj)
         {
-            MsHidDeviceInfo other = obj as MsHidDeviceInfo;
+            MsHidWiimoteInfo other = obj as MsHidWiimoteInfo;
             if (other != null)
                 return Equals(other);
             return base.Equals(obj);
         }
 
-        public virtual bool Equals(MsHidDeviceInfo other)
+        public bool Equals(MsHidWiimoteInfo other)
         {
             return this.DevicePath == other.DevicePath;
         }

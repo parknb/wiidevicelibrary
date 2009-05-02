@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -63,6 +63,11 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 		public BluezStream(BluetoothAddress address) : this(address.ToString())
 		{
 		}
+		
+        //internal BluezStream(NativeMethods.bdaddr_t address)
+        //{
+        //    Connect(address);
+        //}
         #endregion
 
         private void Connect(NativeMethods.bdaddr_t bdaddress)
@@ -75,7 +80,6 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 			// create l2cap address
             NativeMethods.sockaddr_l2 address;
             address.l2_family = NativeMethods.AF_BLUETOOTH;
-			address.l2_cid = 0;
 			
             // allocate sockets
 			_ControlSocket = -1;
@@ -85,10 +89,12 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 				int error = Marshal.GetLastWin32Error();
 				if(_ControlSocket == -1)
 				{
-					if(error != NativeMethods.EINTR)
+					if(error == 4)
 					{
-						throw new WiiDeviceLibrary.DeviceConnectException("Failed to allocate the control socket: " + NativeMethods.strerror(error));
+						Console.WriteLine("Retrying control");
+						continue;
 					}
+					throw new WiiDeviceLibrary.DeviceConnectException("Failed to allocate the control socket.");
 				}
 			}
                 
@@ -99,11 +105,13 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 				int error = Marshal.GetLastWin32Error();
 				if(_InterruptSocket == -1)
 				{
-					if(error != NativeMethods.EINTR)
+					if(error == 4)
 					{
-						NativeMethods.close(_ControlSocket);
-						throw new WiiDeviceLibrary.DeviceConnectException("Failed to allocate the interrupt socket: " + NativeMethods.strerror(error));
+						Console.WriteLine("Retrying interrupt");
+						continue;
 					}
+					NativeMethods.close(_ControlSocket);
+					throw new WiiDeviceLibrary.DeviceConnectException("Failed to allocate the interrupt socket.");
 				}
 			}
 
@@ -112,38 +120,33 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 			address.bdaddr = dongleAddr;
 			if(NativeMethods.bind(_ControlSocket, ref address, (uint)Marshal.SizeOf(address)) == -1)
 			{
-				int error = Marshal.GetLastWin32Error();
 				NativeMethods.close(_ControlSocket);
 				NativeMethods.close(_InterruptSocket);
-				throw new WiiDeviceLibrary.DeviceConnectException("Failed to bind the control socket: " + NativeMethods.strerror(error));
+				throw new WiiDeviceLibrary.DeviceConnectException("Failed to bind the control socket");
 			}
 			
             // connect the control socket
 			address.bdaddr = bdaddress;
 			address.l2_psm = 0x11;
-            while (NativeMethods.connect(_ControlSocket, ref address, (uint)Marshal.SizeOf(address)) == -1)
+            if (NativeMethods.connect(_ControlSocket, ref address, (uint)Marshal.SizeOf(address)) == -1)
             {
 				int error = Marshal.GetLastWin32Error();
-				if(error != NativeMethods.EINTR)
+				if(error != 4)
 				{
 	                NativeMethods.close(_ControlSocket);
 	                NativeMethods.close(_InterruptSocket);
-	                throw new WiiDeviceLibrary.DeviceConnectException("Failed to connect the control socket: " + NativeMethods.strerror(error));
+	                throw new WiiDeviceLibrary.DeviceConnectException("Failed to connect the control socket: " + error);
 				}
             }
 
             // connect the interrupt socket
 			address.bdaddr = bdaddress;
-			address.l2_psm = 0x13;
-            while (NativeMethods.connect(_InterruptSocket, ref address, (uint)Marshal.SizeOf(address)) == -1)
+			address.l2_psm = 0x13;		
+            if (NativeMethods.connect(_InterruptSocket, ref address, (uint)Marshal.SizeOf(address)) == -1)
             {
-				int error = Marshal.GetLastWin32Error();
-				if(error != NativeMethods.EINTR)
-				{
-                	NativeMethods.close(_ControlSocket);
-                	NativeMethods.close(_InterruptSocket);
-                	throw new WiiDeviceLibrary.DeviceConnectException("Failed to connect the interrupt socket: " + NativeMethods.strerror(error));
-				}
+                NativeMethods.close(_ControlSocket);
+                NativeMethods.close(_InterruptSocket);
+                throw new WiiDeviceLibrary.DeviceConnectException("Failed to connect the interrupt socket.");
             }
 			_Connected = true;
         }
@@ -156,7 +159,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 				// with bluez you get a hid byte, this must not be copied into the buffer
 				count = Math.Min(count, receivedByteCount - 1);
 	            Array.Copy(_ReceiveBuffer, 1, buffer, offset, count);
-	            return count;
+	            return count;					
 			}
 			else if (receivedByteCount <= 0)
 			{
@@ -199,16 +202,13 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 				throw new IOException("The control socket is not connected");
             _SendBuffer[0] = 0x52;
             Array.Copy(buffer, offset, _SendBuffer, 1, count);
-			while(NativeMethods.send(_ControlSocket, _SendBuffer, count + 1, 0) == -1)
+            int returnValue = NativeMethods.send(_ControlSocket, _SendBuffer, count + 1, 0);
+			if(returnValue == -1)
 			{
-				int error = Marshal.GetLastWin32Error();
-				if(error != NativeMethods.EINTR)
-				{
-					NativeMethods.close(_InterruptSocket);
-					NativeMethods.close(_ControlSocket);
-					_Connected = false;
-					throw new IOException("Failed to write to the control socket: " + NativeMethods.strerror(error));
-				}
+				NativeMethods.close(_InterruptSocket);
+				NativeMethods.close(_ControlSocket);		
+				_Connected = false;				
+				throw new IOException("Failed to write to the control socket.");
 			}
         }
 

@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -55,7 +55,7 @@ namespace Examples
             // The Bluetooth-address can be used to only use Wii devices with a specific Bluetooth-address.
             if (foundDeviceInfo is IBluetoothDeviceInfo)
             {
-                Console.WriteLine("The address of the Bluetooth device is {0}", ((IBluetoothDeviceInfo)foundDeviceInfo).Address);
+                Console.WriteLine("The address of the Bluetooth device is {0}", ((IBluetoothDeviceInfo)foundDeviceInfo).BluetoothAddress);
                 // That's it for discovering Wii devices, the next step can be found in 'ConnectExample'.
             }
         }
@@ -68,7 +68,7 @@ namespace Examples
 
             if (lostDeviceInfo is IBluetoothDeviceInfo)
             {
-                Console.WriteLine("The address of the Bluetooth device is {0}", ((IBluetoothDeviceInfo)lostDeviceInfo).Address);
+                Console.WriteLine("The address of the Bluetooth device is {0}", ((IBluetoothDeviceInfo)lostDeviceInfo).BluetoothAddress);
             }
         }
     }

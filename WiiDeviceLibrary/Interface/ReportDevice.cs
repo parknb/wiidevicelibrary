@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -14,12 +14,13 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with Wii Device Library.  If not, see <http://www.gnu.org/licenses/>.
-//#define DEBUG_REPORTS
 
 using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading;
+
+// #define DEBUG_REPORTS
 
 namespace WiiDeviceLibrary
 {
@@ -35,18 +36,13 @@ namespace WiiDeviceLibrary
         private object readReportLocker = new object();
         private int reportConsumers = 0;
         private Stack<byte[]> returningReports = new Stack<byte[]>();
-        private bool isConnected = true;
+		private bool isConnected = true;
         #endregion
 
         #region Protected Properties
         protected byte[] OutputBuffer
         {
             get { return outputBuffer; }
-        }
-
-        protected bool IsConnected
-        {
-            get { return isConnected; }
         }
         #endregion
 
@@ -92,10 +88,6 @@ namespace WiiDeviceLibrary
         }
         #endregion
 
-        #region Abstract Members
-        public abstract void Initialize();
-        #endregion
-
         #region IDevice Members
         private IDeviceInfo _DeviceInfo;
         public IDeviceInfo DeviceInfo
@@ -103,7 +95,7 @@ namespace WiiDeviceLibrary
             get { return _DeviceInfo; }
         }
 
-        private ReportingMode _ReportingMode = ReportingMode.Buttons;
+        private ReportingMode _ReportingMode;
         public ReportingMode ReportingMode
         {
             get { return _ReportingMode; }
@@ -128,8 +120,6 @@ namespace WiiDeviceLibrary
 
         public virtual void SetReportingMode(ReportingMode reportMode)
         {
-            if (reportMode == ReportingMode.None)
-                throw new ArgumentException("The ReportingMode cannot be set to None.", "reportMode");
             CreateReport(OutputReport.SetDataReportMode);
             OutputBuffer[1] = 0x04;
             OutputBuffer[2] = (byte)reportMode;
@@ -152,33 +142,25 @@ namespace WiiDeviceLibrary
             OutputBuffer[6] = (byte)(count & 0x00ff);
 
             int i = 0;
-            using (IReportInterceptor reportInterceptor = CreateReportInterceptor())
+            foreach (byte[] readDataResultReport in SendAndReturnReports(InputReport.ReadDataResult))
             {
-                SendReport();
-                byte[] report = null;
-                while ((report = reportInterceptor.Intercept()) != null)
-                {
-                    if (report[0] == (byte)InputReport.ReadDataResult)
-                    {
-                        int size = (report[3] >> 4) + 1;
-                        Array.Copy(report, 6, buffer, offset + i * 16, size);
-                        i++;
-                        if (size != 16 || i * 16 == count)
-                            break;
+                int size = (readDataResultReport[3] >> 4) + 1;
+                Array.Copy(readDataResultReport, 6, buffer, offset + i * 16, size);
+                i++;
+                if (size != 16 || i * 16 == count)
+                    break;
 
-                        byte errorCode = (byte)(report[3] & 0x0f);
-                        switch (errorCode)
-                        {
-                            case 0:
-                                break;
-                            case 8:
-                                throw new ArgumentException("The specified range to read contains non-existent addresses.", "address");
-                            case 7:
-                                throw new ArgumentException("The specified range to read contains write-only registers.", "address");
-                            default:
-                                throw new InvalidDataException("The wiimote returned an unknown errorcode.");
-                        }
-                    }
+                byte errorCode = (byte)(readDataResultReport[3] & 0x0f);
+                switch (errorCode)
+                {
+                    case 0:
+                        break;
+                    case 8:
+                        throw new ArgumentException("The specified range to read contains non-existent addresses.", "address");
+                    case 7:
+                        throw new ArgumentException("The specified range to read contains write-only registers.", "address");
+                    default:
+                        throw new InvalidDataException("The wiimote returned an unknown errorcode.");
                 }
             }
         }
@@ -205,18 +187,12 @@ namespace WiiDeviceLibrary
                     // When WriteMemory is send 2 times, where no confirmation is send back yet, errorcode 4 will be send.
                     // throw new InvalidOperationException("WriteMemory was called when there was no confirmation send back. This should not happen, unless you are using WriteMemory (directly or indirectly) from the Updated eventhandler.");
                     break;
-                case 0x05:
-                    // Occurs when WriteMemory in InitializeWiimote is called. The reason for the error is unknown.
-                    // Seems to happen only with Bluesoleil.
-                    throw new InvalidOperationException("WriteMemory could not be executed.");
                 case 0x07:
-                    // Ignore this exception for now.
-                    // throw new ArgumentException("The specified address is not accesible.");
-                    break;
+                    throw new ArgumentException("The specified address is not accesible.");
                 case 0x08:
                     throw new ArgumentException("The specified address and bytes overlaps unwritable memory.");
                 default:
-                    throw new InvalidOperationException(string.Format("The WriteMemory-operation resulted in an unknown error ({0}).", writeResultReport[4]));
+                    throw new InvalidOperationException();
             }
         }
         #endregion
@@ -242,13 +218,13 @@ namespace WiiDeviceLibrary
             readingThread = Thread.CurrentThread;
             byte[] buffer = (byte[])result.AsyncState;
 
+
             try
             {
                 bytesRead = communicationStream.EndRead(result);
             }
             catch (OperationCanceledException)
             {
-                Disconnect();
                 return;
             }
             catch (IOException)
@@ -256,23 +232,15 @@ namespace WiiDeviceLibrary
                 Disconnect();
                 return;
             }
-            catch (NullReferenceException)
-            {
-                // Although the documentation says this can never happen, Reflector tells us otherwise.
-                // This happened at one of Maato's test-systems where this exception was thrown.
-                Disconnect();
-                return;
-            }
 
-            if (bytesRead <= 0)
+            if (bytesRead == 0)
             {
                 Disconnect();
                 return;
             }
 
             OnReportReceived(buffer);
-            if (IsConnected)
-                BeginReadReport();
+            BeginReadReport();
         }
 
         protected abstract bool ParseReport(byte[] report);
@@ -306,21 +274,20 @@ namespace WiiDeviceLibrary
                     throw new InvalidProgramException();
                 returningReports.Pop();
 
-
                 Monitor.Exit(readReportLocker);
+                Monitor.Enter(reportLocker);
             }
-            else
-                Monitor.Exit(reportLocker);
+            Monitor.Exit(reportLocker);
         }
 
         public void Disconnect()
         {
-            if (isConnected)
-            {
-                isConnected = false;
-                communicationStream.Close();
-                OnDisconnected(EventArgs.Empty);
-            }
+			if(isConnected)
+			{
+				communicationStream.Close();
+				OnDisconnected(EventArgs.Empty);
+				isConnected = false;
+			}
         }
         #endregion
 
@@ -347,7 +314,7 @@ namespace WiiDeviceLibrary
         {
 #if DEBUG_REPORTS
             Console.Write("> ");
-            Console.WriteLine(ToHexadecimal(OutputBuffer));
+            Console.WriteLine(ToHexadecimal(outputReport));
 #endif
             SendReport(this.OutputBuffer);
         }
@@ -366,112 +333,99 @@ namespace WiiDeviceLibrary
         private byte[] ReadReport()
         {
             byte[] report = new byte[maximalReportLength];
-            int result = communicationStream.Read(report, 0, report.Length);
-            if (result > 0)
-            {
-                OnReportReceived(report);
-                return report;
-            }
-            return null;
+            communicationStream.Read(report, 0, report.Length);
+            OnReportReceived(report);
+            return report;
         }
+
         protected byte[] SendAndReturnReport(InputReport returnReportType)
         {
             return SendAndReturnReport(returnReportType, TimeSpan.FromSeconds(3));
         }
 
-        protected byte[] SendAndReturnReport(InputReport returnReportType, TimeSpan timeout)
+        protected IEnumerable<byte[]> SendAndReturnReports(InputReport returnReportType)
         {
-            byte[] report = null;
-            using (IReportInterceptor reportInterceptor = CreateReportInterceptor())
+            return SendAndReturnReports(returnReportType, TimeSpan.FromSeconds(3));
+        }
+
+        protected IEnumerable<byte[]> SendAndReturnReports(InputReport returnReportType, TimeSpan timeout)
+        {
+            lock (reportLocker)
             {
                 SendReport();
-                while ((report = reportInterceptor.Intercept()) != null)
+                int yieldCount = 0;
+                byte[] resultReport;
+                do
                 {
-                    if (report[0] == (byte)returnReportType)
+                    DateTime startTime = DateTime.Now;
+                    if (readingThread == Thread.CurrentThread)
+                        resultReport = ReadReport();
+                    else if (!InterceptReport(timeout - (DateTime.Now - startTime), out resultReport))
+                        throw new TimeoutException("Could not retrieve result-report.");
+
+                    if (resultReport[0] == (byte)returnReportType)
+                    {
+                        yieldCount++;
+                        yield return resultReport;
+                    }
+                }
+                while (resultReport[0] == (byte)returnReportType || yieldCount == 0);
+            }
+        }
+
+
+
+        protected byte[] SendAndReturnReport(InputReport returnReportType, TimeSpan timeout)
+        {
+            byte[] result = null;
+            lock (reportLocker)
+            {
+                DateTime startTime = DateTime.Now;
+
+                SendReport();
+
+                byte[] resultReport;
+                do
+                {
+                    if (readingThread == Thread.CurrentThread)
+                        resultReport = ReadReport();
+                    else if (!InterceptReport(timeout - (DateTime.Now - startTime), out resultReport))
+                    {
+                        resultReport = null;
                         break;
+                    }
                 }
+                while (resultReport[0] != (byte)returnReportType);
+
+                if (resultReport != null)
+                    result = (byte[])resultReport.Clone();
             }
-            if (report == null)
+            if (result == null)
                 throw new TimeoutException("Could not retrieve result-report.");
-            return report;
+            return result;
         }
 
-        #region Report Intercepting
-        protected IReportInterceptor CreateReportInterceptor()
+        private bool InterceptReport(TimeSpan timeout, out byte[] report)
         {
-            if (readingThread == Thread.CurrentThread)
-                return new SyncReportInterceptor(this);
+            reportConsumers++;
+            if (Monitor.Wait(reportLocker, timeout))
+            {
+                lock (readReportLocker)
+                {
+                    report = returningReports.Peek();
+
+                    reportConsumers--;
+                    Monitor.Pulse(readReportLocker);
+                }
+                return true;
+            }
             else
-                return new AsyncReportInterceptor(this);
-        }
-
-        protected interface IReportInterceptor : IDisposable
-        {
-            byte[] Intercept();
-        }
-
-        protected class SyncReportInterceptor : IReportInterceptor
-        {
-            ReportDevice device;
-
-            public SyncReportInterceptor(ReportDevice device)
             {
-                this.device = device;
-            }
-
-            public byte[] Intercept()
-            {
-                return device.ReadReport();
-            }
-
-            public void Dispose()
-            {
+                reportConsumers--;
+                report = null;
+                return false;
             }
         }
-
-        protected class AsyncReportInterceptor : IReportInterceptor
-        {
-            ReportDevice device;
-            TimeSpan timeout;
-
-            public AsyncReportInterceptor(ReportDevice device)
-                : this(device, TimeSpan.FromSeconds(5))
-            {
-            }
-
-            public AsyncReportInterceptor(ReportDevice device, TimeSpan timeout)
-            {
-                this.device = device;
-                this.timeout = timeout;
-
-                if (device.readingThread != Thread.CurrentThread)
-                {
-                    Monitor.Enter(device.reportLocker);
-                    device.reportConsumers++;
-                }
-            }
-
-            public byte[] Intercept()
-            {
-                byte[] report = null;
-                if (Monitor.Wait(device.reportLocker, timeout))
-                {
-                    Monitor.Enter(device.readReportLocker);
-                    report = device.returningReports.Peek();
-
-                    Monitor.Pulse(device.readReportLocker);
-                    Monitor.Exit(device.readReportLocker);
-                }
-                return report;
-            }
-
-            public void Dispose()
-            {
-                device.reportConsumers--;
-                Monitor.Exit(device.reportLocker);
-            }
-        }
-        #endregion
         #endregion
 
         #region Events

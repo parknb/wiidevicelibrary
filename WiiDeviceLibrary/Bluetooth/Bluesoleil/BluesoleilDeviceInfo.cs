@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -18,11 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using WiiDeviceLibrary.Bluetooth.MsHid;
 
 namespace WiiDeviceLibrary.Bluetooth.Bluesoleil
 {
-    public class BluesoleilDeviceInfo : MsHidDeviceInfo, IBluetoothDeviceInfo
+    public class BluesoleilDeviceInfo : IBluetoothDeviceInfo
     {
         #region Properties
         private BluetoothDevice _Device;
@@ -37,15 +36,10 @@ namespace WiiDeviceLibrary.Bluetooth.Bluesoleil
             get { return _Service; }
         }
 
-        private BluetoothAddress _Address;
-        public BluetoothAddress Address
+        private BluetoothAddress _BluetoothAddress;
+        public BluetoothAddress BluetoothAddress
         {
-            get { return _Address; }
-        }
-
-        public string Name
-        {
-            get { return this.Device.Name; }
+            get { return _BluetoothAddress; }
         }
         #endregion
         #region Constructors
@@ -53,26 +47,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluesoleil
         {
             _Device = device;
             _Service = service;
-            _Address = new BluetoothAddress(device.Address);
-        }
-        #endregion
-        #region Methods
-        public override bool Equals(MsHidDeviceInfo other)
-        {
-            BluesoleilDeviceInfo bsdiOther = other as BluesoleilDeviceInfo;
-            if (bsdiOther == null)
-                return false;
-            return Equals(bsdiOther);
-        }
-
-        public bool Equals(BluesoleilDeviceInfo other)
-        {
-            return this.Address == other.Address;
-        }
-
-        public override int GetHashCode()
-        {
-            return Address.GetHashCode();
+            _BluetoothAddress = new BluetoothAddress(device.Address);
         }
         #endregion
     }

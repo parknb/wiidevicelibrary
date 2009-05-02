@@ -1,4 +1,4 @@
-//    Copyright 2009 Wii Device Library authors
+//    Copyright 2008 Wii Device Library authors
 //
 //    This file is part of Wii Device Library.
 //
@@ -217,9 +217,8 @@ namespace WiiDeviceLibrary.Bluetooth.MsBluetooth
         {
             BluetoothRadioInfo radioInfo = default(BluetoothRadioInfo);
             int result = BluetoothGetRadioInfo(radioHandle, ref radioInfo);
-            HandleResult(result);
-            //if (result != 0)
-            //    throw new InvalidOperationException();
+            if (result != 0)
+                throw new InvalidOperationException();
             return radioInfo;
         }
 
