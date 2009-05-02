@@ -83,6 +83,7 @@ namespace LinuxGUITest
 					_ExtensionInformation = new ClassicControllerInformation((ClassicControllerExtension)_Wiimote.Extension);
 					GtkAlignment2.Add(_ExtensionInformation.Widget);
 				}
+				_Wiimote.SetReportingMode(_Wiimote.ReportingMode);
 			});
 		}
 		
@@ -92,6 +93,7 @@ namespace LinuxGUITest
 			{
 				GtkAlignment2.Remove(_ExtensionInformation.Widget);
 				_ExtensionInformation = null;
+				_Wiimote.SetReportingMode(_Wiimote.ReportingMode);
 			});
 		}		
 		
@@ -197,8 +199,6 @@ namespace LinuxGUITest
 		{
             foreach (ReportingMode reportingMode in Enum.GetValues(typeof(ReportingMode)))
 			{
-				if (reportingMode == ReportingMode.None)
-					continue;
                 if (comboboxReportingMode.ActiveText == reportingMode.ToString())
 				{
                     if (reportingMode != _Wiimote.ReportingMode)

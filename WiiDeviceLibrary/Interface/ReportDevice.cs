@@ -43,11 +43,6 @@ namespace WiiDeviceLibrary
         {
             get { return outputBuffer; }
         }
-
-        protected bool IsConnected
-        {
-            get { return isConnected; }
-        }
         #endregion
 
         #region Constructors
@@ -103,7 +98,7 @@ namespace WiiDeviceLibrary
             get { return _DeviceInfo; }
         }
 
-        private ReportingMode _ReportingMode = ReportingMode.Buttons;
+        private ReportingMode _ReportingMode;
         public ReportingMode ReportingMode
         {
             get { return _ReportingMode; }
@@ -128,8 +123,6 @@ namespace WiiDeviceLibrary
 
         public virtual void SetReportingMode(ReportingMode reportMode)
         {
-            if (reportMode == ReportingMode.None)
-                throw new ArgumentException("The ReportingMode cannot be set to None.", "reportMode");
             CreateReport(OutputReport.SetDataReportMode);
             OutputBuffer[1] = 0x04;
             OutputBuffer[2] = (byte)reportMode;
@@ -207,8 +200,7 @@ namespace WiiDeviceLibrary
                     break;
                 case 0x05:
                     // Occurs when WriteMemory in InitializeWiimote is called. The reason for the error is unknown.
-                    // Seems to happen only with Bluesoleil.
-                    throw new InvalidOperationException("WriteMemory could not be executed.");
+                    break;
                 case 0x07:
                     // Ignore this exception for now.
                     // throw new ArgumentException("The specified address is not accesible.");
@@ -271,8 +263,7 @@ namespace WiiDeviceLibrary
             }
 
             OnReportReceived(buffer);
-            if (IsConnected)
-                BeginReadReport();
+            BeginReadReport();
         }
 
         protected abstract bool ParseReport(byte[] report);
@@ -366,13 +357,9 @@ namespace WiiDeviceLibrary
         private byte[] ReadReport()
         {
             byte[] report = new byte[maximalReportLength];
-            int result = communicationStream.Read(report, 0, report.Length);
-            if (result > 0)
-            {
-                OnReportReceived(report);
-                return report;
-            }
-            return null;
+            communicationStream.Read(report, 0, report.Length);
+            OnReportReceived(report);
+            return report;
         }
         protected byte[] SendAndReturnReport(InputReport returnReportType)
         {

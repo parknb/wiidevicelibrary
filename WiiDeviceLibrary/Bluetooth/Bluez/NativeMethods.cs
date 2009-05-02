@@ -132,13 +132,12 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 			public byte f;
 		}
 		
-		[StructLayout(LayoutKind.Sequential, Pack=2)]
+		[StructLayout(LayoutKind.Sequential)]
 		internal struct sockaddr_l2
 		{
 			public ushort l2_family;
 			public ushort l2_psm;
 			public bdaddr_t bdaddr;
-			public ushort l2_cid;
 		}
 	
 		[DllImport("libc")]
@@ -179,13 +178,5 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 		
 		[DllImport("libc", SetLastError = true)]
 		public static extern int send(int socket, [MarshalAs(UnmanagedType.LPArray)]byte[] buffer, int length, int flags);			
-		
-        [DllImport ("libc", EntryPoint="strerror")]
-		static extern IntPtr _strerror(int errnum);
-		public static string strerror (int errnum)
-		{
-			return Marshal.PtrToStringAnsi (_strerror (errnum));
-		}		
-		
 	}
 }

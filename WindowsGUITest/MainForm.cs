@@ -248,7 +248,7 @@ namespace WindowsGUITest
         {
             StringBuilder sbuilder = new StringBuilder();
             if (DeviceInfo is IBluetoothDeviceInfo)
-                sbuilder.Append(((IBluetoothDeviceInfo)DeviceInfo).Address);
+                sbuilder.Append(((IBluetoothDeviceInfo)DeviceInfo).BluetoothAddress);
             else
                 sbuilder.Append(DeviceInfo.ToString());
             if (Device != null)

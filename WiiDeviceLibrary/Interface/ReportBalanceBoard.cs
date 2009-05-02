@@ -44,7 +44,6 @@ namespace WiiDeviceLibrary
 
         public override void Initialize()
         {
-            UpdateStatus();
             ReadCalibrationData();
             SetReportingMode(ReportingMode.Buttons8Extension);
         }

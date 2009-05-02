@@ -77,25 +77,18 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
             }
         }
 
-		private int CreateDiscoverSocket()
-		{
-			int adapterId = -1;
-			int socket = -1;
-			
-			// Find a bluetooth adapter, repeat until found
-			while(_DiscoverThread != null && adapterId == -1)
-			{
-				adapterId = NativeMethods.hci_get_route(IntPtr.Zero);
-				Thread.Sleep(1000);
-			}
-			
-			// did the loop exit because of _DiscoverThread or adapterId
-			if(adapterId == -1)
-				return -1;
-			
+        private void DiscoverFunction()
+        {
+            int deviceId = 0;
+            byte[] buffer = new byte[255];
+            
+			// get the id of the device.
+            if ((deviceId = NativeMethods.hci_get_route(IntPtr.Zero)) < 0)
+                return;
+
 			// create the socket
-            if ((socket = NativeMethods.hci_open_dev(adapterId)) == -1)
-                return -1;
+            if ((_DiscoverSocket = NativeMethods.hci_open_dev(deviceId)) < 0)
+                return;
 
 			// configure the socket
             NativeMethods.hci_filter filter = default(NativeMethods.hci_filter);
@@ -103,32 +96,13 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
             filter.type_mask = 16;
             filter.event_mask_a = 0xffffffff;
             filter.event_mask_b = 0xffffffff;
-            NativeMethods.setsockopt(socket, NativeMethods.SOL_HCI, NativeMethods.HCI_FILTER, ref filter, 14);				
-			
-			return socket;
-		}
-		
-        private void DiscoverFunction()
-        {
-            byte[] buffer = new byte[255];
-            _DiscoverSocket = CreateDiscoverSocket();
-			if(_DiscoverSocket == -1)
-				return;
-			InitiateInquiry();
-			
+            NativeMethods.setsockopt(_DiscoverSocket, NativeMethods.SOL_HCI, NativeMethods.HCI_FILTER, ref filter, 14);
 
+            // send initial command and then start listening on the socket
+            InitiateInquiry();
             while (_DiscoverThread != null)
             {
                 int bytes = NativeMethods.recv(_DiscoverSocket, buffer, 255, 0);
-				if(bytes == -1)
-				{
-					NativeMethods.hci_close_dev(_DiscoverSocket);
-					_DiscoverSocket = CreateDiscoverSocket();
-					if(_DiscoverSocket == -1)
-						return;
-					InitiateInquiry();
-					continue;
-				}				
 				ParseEvent(buffer, bytes);
             }           
 			NativeMethods.hci_close_dev(_DiscoverSocket);
@@ -207,8 +181,8 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 			{
 				if((DateTime.Now - info.LastSeen).TotalSeconds > 3)
 				{
-					_LostDevices[info.Address] = info;
-					_FoundDevices.Remove(info.Address);
+					_LostDevices[info.BluetoothAddress] = info;
+					_FoundDevices.Remove(info.BluetoothAddress);
 					if(DeviceLost != null)
 						DeviceLost(this, new DeviceInfoEventArgs(info));
 				}
@@ -279,7 +253,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 		{
 			foreach(IDevice device in _ConnectedDevices)
 			{
-				if ((device.DeviceInfo as BluezDeviceInfo).Address.Equals(address))
+				if ((device.DeviceInfo as BluezDeviceInfo).BluetoothAddress.Equals(address))
 					return true;
 			}
 			return false;
@@ -299,7 +273,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
             if (info == null)
                 throw new ArgumentException("The specified IDeviceInfo does not belong to this DeviceProvider.", "deviceInfo");
             
-            Stream bluezStream = new BluezStream(info.Address);
+            Stream bluezStream = new BluezStream(info.BluetoothAddress);
             IWiiDevice device = null;
 			
 			// determine the device type
@@ -319,8 +293,8 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 				throw new DeviceConnectException("Failed to connect to device", e);
 			}	
 
-			_FoundDevices.Remove(info.Address);
-			_LostDevices.Add(info.Address, info);			
+			_FoundDevices.Remove(info.BluetoothAddress);
+			_LostDevices.Add(info.BluetoothAddress, info);			
 			if(DeviceLost != null)
 				DeviceLost(this, new DeviceInfoEventArgs(info));
 			

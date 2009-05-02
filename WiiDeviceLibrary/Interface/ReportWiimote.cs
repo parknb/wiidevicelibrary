@@ -635,16 +635,7 @@ namespace WiiDeviceLibrary
         #region Extension Methods
         protected void InitializeExtension()
         {
-            try
-            {
-                WriteMemory(0x04a40040, 0); // Set the encryption-key to 0.
-            }
-            catch (TimeoutException)
-            {
-                if (IsConnected)
-                    throw;
-                return;
-            }
+            WriteMemory(0x04a40040, 0); // Set the encryption-key to 0.
             byte[] extensionTypeBytes = ReadMemory(0x04a400fe, 2);
             extensionTypeBytes[0] = (byte)((extensionTypeBytes[0] ^ 0x17) + 0x17 & 0xFF);
             extensionTypeBytes[1] = (byte)((extensionTypeBytes[1] ^ 0x17) + 0x17 & 0xFF);

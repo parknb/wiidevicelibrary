@@ -75,7 +75,6 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 			// create l2cap address
             NativeMethods.sockaddr_l2 address;
             address.l2_family = NativeMethods.AF_BLUETOOTH;
-			address.l2_cid = 0;
 			
             // allocate sockets
 			_ControlSocket = -1;
@@ -87,7 +86,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 				{
 					if(error != NativeMethods.EINTR)
 					{
-						throw new WiiDeviceLibrary.DeviceConnectException("Failed to allocate the control socket: " + NativeMethods.strerror(error));
+						throw new WiiDeviceLibrary.DeviceConnectException("Failed to allocate the control socket.");
 					}
 				}
 			}
@@ -102,7 +101,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 					if(error != NativeMethods.EINTR)
 					{
 						NativeMethods.close(_ControlSocket);
-						throw new WiiDeviceLibrary.DeviceConnectException("Failed to allocate the interrupt socket: " + NativeMethods.strerror(error));
+						throw new WiiDeviceLibrary.DeviceConnectException("Failed to allocate the interrupt socket.");
 					}
 				}
 			}
@@ -112,10 +111,9 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 			address.bdaddr = dongleAddr;
 			if(NativeMethods.bind(_ControlSocket, ref address, (uint)Marshal.SizeOf(address)) == -1)
 			{
-				int error = Marshal.GetLastWin32Error();
 				NativeMethods.close(_ControlSocket);
 				NativeMethods.close(_InterruptSocket);
-				throw new WiiDeviceLibrary.DeviceConnectException("Failed to bind the control socket: " + NativeMethods.strerror(error));
+				throw new WiiDeviceLibrary.DeviceConnectException("Failed to bind the control socket");
 			}
 			
             // connect the control socket
@@ -128,7 +126,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 				{
 	                NativeMethods.close(_ControlSocket);
 	                NativeMethods.close(_InterruptSocket);
-	                throw new WiiDeviceLibrary.DeviceConnectException("Failed to connect the control socket: " + NativeMethods.strerror(error));
+	                throw new WiiDeviceLibrary.DeviceConnectException("Failed to connect the control socket: " + error);
 				}
             }
 
@@ -142,7 +140,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 				{
                 	NativeMethods.close(_ControlSocket);
                 	NativeMethods.close(_InterruptSocket);
-                	throw new WiiDeviceLibrary.DeviceConnectException("Failed to connect the interrupt socket: " + NativeMethods.strerror(error));
+                	throw new WiiDeviceLibrary.DeviceConnectException("Failed to connect the interrupt socket.");
 				}
             }
 			_Connected = true;
@@ -207,7 +205,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluez
 					NativeMethods.close(_InterruptSocket);
 					NativeMethods.close(_ControlSocket);
 					_Connected = false;
-					throw new IOException("Failed to write to the control socket: " + NativeMethods.strerror(error));
+					throw new IOException("Failed to write to the control socket.");
 				}
 			}
         }

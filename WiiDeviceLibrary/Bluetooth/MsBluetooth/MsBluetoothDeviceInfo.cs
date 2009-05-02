@@ -25,15 +25,10 @@ namespace WiiDeviceLibrary.Bluetooth.MsBluetooth
     public class MsBluetoothDeviceInfo: MsHidDeviceInfo, IBluetoothDeviceInfo
     {
         #region Properties
-        private BluetoothAddress _Address;
-        public BluetoothAddress Address
+        private BluetoothAddress _BluetoothAddress;
+        public BluetoothAddress BluetoothAddress
         {
-            get { return _Address; }
-        }
-
-        public string Name
-        {
-            get { return this.Device.name; }
+            get { return _BluetoothAddress; }
         }
 
         private NativeMethods.BluetoothDeviceInfo _Device;
@@ -46,7 +41,7 @@ namespace WiiDeviceLibrary.Bluetooth.MsBluetooth
         #region Constructors
         internal MsBluetoothDeviceInfo(BluetoothAddress bluetoothAddress, NativeMethods.BluetoothDeviceInfo device)
         {
-            _Address = bluetoothAddress;
+            _BluetoothAddress = bluetoothAddress;
             _Device = device;
         }
         #endregion
@@ -61,12 +56,12 @@ namespace WiiDeviceLibrary.Bluetooth.MsBluetooth
 
         public bool Equals(MsBluetoothDeviceInfo other)
         {
-            return this.Address == other.Address;
+            return this.BluetoothAddress == other.BluetoothAddress;
         }
 
         public override int GetHashCode()
         {
-            return Address.GetHashCode();
+            return BluetoothAddress.GetHashCode();
         }
         #endregion
     }

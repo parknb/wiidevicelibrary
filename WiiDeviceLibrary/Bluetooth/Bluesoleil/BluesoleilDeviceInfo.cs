@@ -37,15 +37,10 @@ namespace WiiDeviceLibrary.Bluetooth.Bluesoleil
             get { return _Service; }
         }
 
-        private BluetoothAddress _Address;
-        public BluetoothAddress Address
+        private BluetoothAddress _BluetoothAddress;
+        public BluetoothAddress BluetoothAddress
         {
-            get { return _Address; }
-        }
-
-        public string Name
-        {
-            get { return this.Device.Name; }
+            get { return _BluetoothAddress; }
         }
         #endregion
         #region Constructors
@@ -53,7 +48,7 @@ namespace WiiDeviceLibrary.Bluetooth.Bluesoleil
         {
             _Device = device;
             _Service = service;
-            _Address = new BluetoothAddress(device.Address);
+            _BluetoothAddress = new BluetoothAddress(device.Address);
         }
         #endregion
         #region Methods
@@ -67,12 +62,12 @@ namespace WiiDeviceLibrary.Bluetooth.Bluesoleil
 
         public bool Equals(BluesoleilDeviceInfo other)
         {
-            return this.Address == other.Address;
+            return this.BluetoothAddress == other.BluetoothAddress;
         }
 
         public override int GetHashCode()
         {
-            return Address.GetHashCode();
+            return BluetoothAddress.GetHashCode();
         }
         #endregion
     }

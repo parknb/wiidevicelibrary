@@ -24,12 +24,7 @@ namespace WiiDeviceLibrary
 {
     public interface IBluetoothDeviceInfo: IDeviceInfo
     {
-        BluetoothAddress Address
-        {
-            get;
-        }
-
-        string Name
+        BluetoothAddress BluetoothAddress
         {
             get;
         }
